@@ -1,7 +1,7 @@
 {
   "name": "nwjs-reporter",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "main": "./nwjs-reporter.js",
   "dependencies": {
     "node-uuid": "^1.4.7",

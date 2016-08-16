@@ -1,10 +1,19 @@
 'use strict';
 
+var fs = require('fs');
 var fse = require('fs-extra');
 var rootpath = require('app-root-path');
 var yargs = require('yargs');
 var getSites = function() {
-  return yargs.argv.site.replace(/^\s*|\s*$/g,'').split(/\s*,\s*/) || ['mla'];
+    var sites;
+    if (yargs.argv.site) {
+        sites = yargs.argv.site.replace(/^\s*|\s*$/g,'').split(/\s*,\s*/);
+    }
+    else {
+        sites = ['mla'];
+    }
+
+    return sites;
 };
 
 module.exports = {
@@ -14,7 +23,7 @@ module.exports = {
         var sites = getSites();
 
         try {
-            var nwconfjs = JSON.parse(fse.readFileSync(rootpath + '/nightwatch.json','utf8'));
+            var nwconfjs = JSON.parse(fs.readFileSync(rootpath + '/nightwatch.json','utf8'));
             var reportsPath = rootpath + '/' + nwconfjs.output_folder;
             for (var site in sites) {
                 fse.ensureDirSync(reportsPath + '/' + sites[site]);
@@ -29,7 +38,7 @@ module.exports = {
 
     generateJsonReports: function(results, done) {
 
-        var nwconfjs = JSON.parse(fse.readFileSync(rootpath + '/nightwatch.json','utf8'));
+        var nwconfjs = JSON.parse(fs.readFileSync(rootpath + '/nightwatch.json','utf8'));
         var reportsPath = rootpath + '/' + nwconfjs.output_folder;
         var sites = getSites();
 
@@ -41,7 +50,7 @@ module.exports = {
                 var replaceSlash = module.replace(/\//g, '-');
                 var filename = replaceSlash + '.json';
                 var moduleData = results.modules[module];
-                fse.writeFileSync(siteReportPath + filename, JSON.stringify(moduleData), 'utf8');
+                fs.writeFileSync(siteReportPath + filename, JSON.stringify(moduleData), 'utf8');
             }
         }
         console.log('Done generating report files!');
@@ -49,7 +58,7 @@ module.exports = {
     },
 
     summarizeAndPrintResults: function(done) {
-        var nwconfjs = JSON.parse(fse.readFileSync(rootpath + '/nightwatch.json','utf8'));
+        var nwconfjs = JSON.parse(fs.readFileSync(rootpath + '/nightwatch.json','utf8'));
         var reportsPath = rootpath + '/' + nwconfjs.output_folder;
         var sites = getSites();
 
@@ -59,7 +68,7 @@ module.exports = {
 
         for (var site in sites) {
             var siteReportPath = reportsPath + '/' + sites[site] + '/';
-            var reports = fse.readdirSync(siteReportPath, 'utf8').filter(function(elem) {
+            var reports = fs.readdirSync(siteReportPath, 'utf8').filter(function(elem) {
                 return !elem.startsWith('summary') && elem.endsWith('.json');
             });
 
@@ -71,13 +80,13 @@ module.exports = {
 
             for (var i = 0; i < reports.length;i++) {
 
-                var file = JSON.parse(fse.readFileSync(siteReportPath + '/' + reports[i], 'utf8'));
+                var file = JSON.parse(fs.readFileSync(siteReportPath + '/' + reports[i], 'utf8'));
                 summary.tests += file.tests;
                 summary.failures += file.failures;
                 summary.errors += file.errors;
             }
 
-            fse.writeFileSync(siteReportPath + '/summary.json', JSON.stringify(summary), 'utf8');
+            fs.writeFileSync(siteReportPath + '/summary.json', JSON.stringify(summary), 'utf8');
 
             console.log('['+sites[site]+']')
             console.log('Total tests: ' + summary.tests);

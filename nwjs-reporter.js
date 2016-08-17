@@ -77,7 +77,8 @@ module.exports = {
             var summary = {
                 tests: 0,
                 failures: 0,
-                errors: 0
+                errors: 0,
+                failDetails: {}
             };
 
             for (var i = 0; i < reports.length;i++) {
@@ -86,6 +87,20 @@ module.exports = {
                 summary.tests += file.tests;
                 summary.failures += file.failures;
                 summary.errors += file.errors;
+
+                if (file.failures > 0) {
+                    for (var prop in file.completed) {
+                        var spec = file.completed[prop];
+                        if (spec.failed > 0) {
+                            var failedAssertions = spec.assertions.filter(function(item) {
+                                return item.failure != false;
+                            });
+
+                            summary.failDetails[prop] = failedAssertions;
+                        }
+                    }
+                }
+
             }
 
             fs.writeFileSync(siteReportPath + '/summary.json', JSON.stringify(summary), 'utf8');
@@ -95,9 +110,20 @@ module.exports = {
             console.log('Total failures: ' + summary.failures);
             console.log('Total errors: ' + summary.errors);
             console.log('\n');
+            if (summary.failures > 0) {
+                console.log('Error details:')
+                for (var fail in summary.failDetails) {
+                    console.log('> '+fail);
+                    var failAssert = summary.failDetails[fail];
+                    for (var assertion in failAssert) {
+                        console.log('\t'+failAssert[assertion].message);
+                        console.log('\t'+failAssert[assertion].stackTrace);
+                    }
+                }
+                console.log('\n');
+            }
         }
 
         done();
-        //console.log(JSON.stringify(summary));
     }
 };

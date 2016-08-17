@@ -70,8 +70,8 @@ module.exports = {
             var siteReportPath = reportsPath + '/' + sites[site] + '/';
             var files = fs.readdirSync(siteReportPath, 'utf8');
             var reports = files.filter(function(elem) {
-                var filtered = !elem.startsWith('summary') && elem.endsWith('.json');
-                return filtered;
+
+                return /^(?!summary)(.*\.json)/.test(elem);;
             });
 
             var summary = {

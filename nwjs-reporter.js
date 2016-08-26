@@ -49,7 +49,9 @@ module.exports = {
                 var siteReportPath = reportsPath + '/' + sites[site] + '/';
                 var replaceSlash = module.replace(/\//g, '-');
                 var filename = replaceSlash + '.json';
+                var specFileName = module + '.js';
                 var moduleData = results.modules[module];
+                moduleData['specFile'] = module + '.js';
                 fs.writeFileSync(siteReportPath + filename, JSON.stringify(moduleData), 'utf8');
             }
         }
@@ -96,11 +98,12 @@ module.exports = {
                                 return item.failure != false;
                             });
 
-                            summary.failDetails[prop] = failedAssertions;
+                            var errorDetail = summary.failDetails;
+                            errorDetail[file.specFile] = {};
+                            errorDetail[file.specFile][prop] = failedAssertions;
                         }
                     }
                 }
-
             }
 
             fs.writeFileSync(siteReportPath + '/summary.json', JSON.stringify(summary), 'utf8');
@@ -114,10 +117,16 @@ module.exports = {
                 console.log('Error details:')
                 for (var fail in summary.failDetails) {
                     console.log('> '+fail);
-                    var failAssert = summary.failDetails[fail];
-                    for (var assertion in failAssert) {
-                        console.log('\t'+failAssert[assertion].message);
-                        console.log('\t'+failAssert[assertion].stackTrace);
+                    var failSpec = summary.failDetails[fail];
+                    for (var test in failSpec) {
+                        console.log('\t'+test);
+                        failSpec[test].forEach(function(assertion) {
+                            console.log('\t\t- Step: '+assertion.message);
+                            console.log('\t\t- Result: '+assertion.failure.match(/.*(?=\n|$)/i)[0]);
+                            if (assertion.stackTrace) {
+                                console.log('\t\t- Stacktrace: '+assertion.stackTrace.replace(/(\n|\t)+/, ' '));
+                            }
+                        });
                     }
                 }
                 console.log('\n');

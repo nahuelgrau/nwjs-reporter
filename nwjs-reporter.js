@@ -25,6 +25,7 @@ module.exports = {
         try {
             var nwconfjs = JSON.parse(fs.readFileSync(rootpath + '/nightwatch.json','utf8'));
             var reportsPath = rootpath + '/' + nwconfjs.output_folder;
+            fse.emptyDirSync(reportsPath);
             for (var site in sites) {
                 fse.ensureDirSync(reportsPath + '/' + sites[site]);
             }
